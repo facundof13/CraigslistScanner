@@ -2,6 +2,7 @@ var mongoConnect = require("./mongoUtil");
 var db = mongoConnect.getDb();
 const information = db.collection("information");
 const moment = require("moment");
+var ObjectId = require("mongodb").ObjectID;
 
 //get all users
 
@@ -21,15 +22,19 @@ function getUsersToSearch() {
   return new Promise((res, rej) => {
     getAllUsers().then(users => {
       let filtered = users.filter(i => {
+        //we want all users from before this moment and all those who are null
         if (i.lastSearched !== null) {
-          return (
-            moment(users[0].lastSearched).diff(
-              moment().format("LLL"),
-              "hours"
-            ) < 24 // GET TIME DIFFERENCE FROM SERVER
+          return moment(users[0].lastSearched).isBefore(
+            moment().format("LLL"),
+            "hours"
           );
         } else {
           return false;
+        }
+      });
+      users.map(i => {
+        if (i.lastSearched === null) {
+          filtered.push(i);
         }
       });
       res(filtered);
@@ -37,8 +42,24 @@ function getUsersToSearch() {
   });
 }
 
+function updateUserSearched(id) {
+  console.log(id);
+  information.updateOne(
+    { _id: ObjectId(id) },
+    { $set: { lastSearched: moment().format("LLL") } },
+    (err, item) => {
+      if (err) {
+        console.log(err);
+      } else {
+        // console.log(item);
+      }
+    }
+  );
+}
+
 module.exports = {
   getAllUsers,
   addNewUser,
-  getUsersToSearch
+  getUsersToSearch,
+  updateUserSearched
 };
