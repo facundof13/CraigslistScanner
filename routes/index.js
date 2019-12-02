@@ -3,6 +3,7 @@ var router = express.Router();
 const information = require("../informationModel");
 const moment = require("moment");
 /* GET home page. */
+
 router.get("/", (req, res, next) => {
   information.getAllUsers().then(response => {
     res.send(response);
